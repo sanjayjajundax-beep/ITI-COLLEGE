@@ -676,6 +676,184 @@
             letter-spacing: 2px;
             color: #475569;
         }
+    
+/* ===== ITI KOTRI refreshed interface ===== */
+:root{
+  --primary:#173b75;
+  --primary-accent:#2563eb;
+  --secondary:#0f9b8e;
+  --admin:#6337a8;
+  --bg-canvas:#f3f6fb;
+  --surface:#ffffff;
+  --text-main:#17243a;
+  --text-muted:#64748b;
+  --border-color:#e2e8f0;
+  --radius-lg:20px;
+  --radius-md:12px;
+  --shadow-sm:0 4px 14px rgba(25,45,80,.06);
+  --shadow-md:0 12px 30px rgba(25,45,80,.09);
+  --shadow-xl:0 22px 55px rgba(25,45,80,.13);
+}
+html{scroll-behavior:smooth}
+body{
+  background:
+    radial-gradient(ellipse at 8% 0%,rgba(37,99,235,.10),transparent 34rem),
+    radial-gradient(ellipse at 92% 12%,rgba(15,155,142,.09),transparent 30rem),
+    var(--bg-canvas);
+  line-height:1.55;
+}
+header{
+  padding:13px clamp(14px,3vw,42px);
+  background:linear-gradient(115deg,#10294f 0%,#174b83 58%,#087e83 100%);
+  box-shadow:0 8px 28px rgba(15,35,65,.20);
+}
+.brand-logo-icon{
+  width:48px;height:48px;border-radius:15px;
+  background:rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.22);
+  color:#dbeafe;font-size:1.45rem;
+}
+.brand-text h1{font-size:clamp(1rem,2vw,1.3rem);letter-spacing:0}
+.brand-text p{color:#dbeafe;font-size:.78rem}
+.btn-admin-portal{
+  background:rgba(255,255,255,.13);
+  border:1px solid rgba(255,255,255,.3);
+  color:#fff;padding:9px 15px;border-radius:12px;
+}
+.btn-admin-portal:hover{background:#fff;color:#173b75;border-color:#fff}
+.main-container{max-width:1480px;margin:26px auto;padding:0 clamp(12px,2.2vw,30px)}
+#frontLoginSection{max-width:1120px;margin:0 auto}
+#frontLoginSection::before{
+  content:"ITI KOTRI  •  DIGITAL CAMPUS";
+  display:block;text-align:center;
+  color:#2563eb;font-size:.76rem;font-weight:800;
+  letter-spacing:2px;margin:8px 0 5px;
+}
+#frontLoginSection::after{
+  content:"उपस्थिति  •  मासिक टेस्ट  •  छात्र प्रगति मूल्यांकन";
+  display:block;text-align:center;color:#64748b;
+  font-size:.92rem;font-weight:600;margin:-10px 0 26px;
+}
+.login-wrapper{
+  max-width:900px;margin:18px auto 24px;
+  grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;
+}
+.glass-card{
+  border:1px solid rgba(210,222,238,.95);
+  border-radius:22px;padding:clamp(20px,3vw,30px);
+  box-shadow:var(--shadow-md);
+  background:rgba(255,255,255,.94);
+  transition:transform .22s ease,box-shadow .22s ease;
+}
+.glass-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-xl)}
+.glass-card::before{height:6px}
+.card-instructor::before{background:linear-gradient(90deg,#173b75,#4f8ee8)}
+.card-student::before{background:linear-gradient(90deg,#087f78,#39c5a9)}
+.card-header-icon{width:58px;height:58px;border-radius:17px;font-size:1.55rem}
+.card-instructor .card-header-icon{background:linear-gradient(135deg,#e7f0ff,#d9e8ff);color:#1d55a5}
+.card-student .card-header-icon{background:linear-gradient(135deg,#e1fbf4,#d0f4e9);color:#087f78}
+.form-title{font-size:1.28rem;color:#172b4d;margin-bottom:5px}
+.form-subtitle{font-size:.88rem;line-height:1.5;margin-bottom:20px}
+.input-group{margin-bottom:16px}
+.input-group label{font-size:.87rem;color:#334765;margin-bottom:7px}
+.input-group input,.input-group select,.input-group textarea{
+  min-height:45px;padding:11px 13px;border:1px solid #d7e0ec;
+  border-radius:11px;background:#f8faff;font-size:.94rem;
+  transition:border-color .18s,box-shadow .18s,background .18s;
+}
+.input-group input:focus,.input-group select:focus,.input-group textarea:focus{
+  border-color:#4b83d8;background:#fff;
+  box-shadow:0 0 0 4px rgba(37,99,235,.11);
+}
+.btn-submit{
+  min-height:47px;border-radius:12px;font-size:.96rem;
+  box-shadow:0 7px 16px rgba(23,59,117,.15);
+  transition:transform .18s,filter .18s;
+}
+.btn-submit:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.btn-inst-submit{background:linear-gradient(110deg,#173b75,#2869b7)}
+.btn-stud-submit{background:linear-gradient(110deg,#087f78,#10a995)}
+.controls-card,.admin-quick-bar,.max-marks-banner{
+  border:1px solid #e0e8f2;border-radius:16px;
+  box-shadow:var(--shadow-sm);padding:15px 18px;background:#fff;
+}
+.controls-card{margin-bottom:18px}
+.section-bar-title{color:#24466f;font-size:1rem;font-weight:800;margin:20px 0 12px}
+.table-shell,.scorecard-box{
+  border:1px solid #e0e8f2;border-radius:16px;
+  box-shadow:var(--shadow-sm);background:#fff;
+}
+table{font-size:.84rem}
+th,td{padding:8px 9px}
+thead tr:first-child th,thead tr:nth-child(2) th{
+  background:#edf3fb;color:#24466f;font-weight:800;
+}
+.app-btn,.inst-tab-btn,.stud-nav-btn{
+  border-radius:10px;transition:transform .16s,box-shadow .16s,filter .16s;
+}
+.app-btn:hover,.inst-tab-btn:hover,.stud-nav-btn:hover{
+  transform:translateY(-1px);box-shadow:0 5px 12px rgba(25,45,80,.10);
+}
+.app-btn-primary{background:#245eaa}
+.app-btn-success{background:#0b927f}
+.app-btn-purple{background:#6843b6}
+.instructor-tabs{gap:8px}
+.inst-tab-btn{padding:10px 16px;background:#fff;border-color:#dbe4ef}
+.inst-tab-btn.active{background:linear-gradient(110deg,#173b75,#2869b7)}
+.stud-nav-btn{border-radius:12px;padding:14px 16px;border-color:#dbe4ef}
+.metric-card{
+  border-radius:14px;padding:16px;
+  background:linear-gradient(145deg,#fff,#f7faff);
+  border-color:#e1e9f3;
+}
+.metric-card .value{color:#173b75}
+.progress-track{height:9px;border-radius:20px}
+.modal-backdrop{background:rgba(9,22,42,.66);backdrop-filter:blur(7px)}
+.modal-content{
+  border:1px solid rgba(255,255,255,.7);border-radius:20px;
+  padding:clamp(18px,3vw,26px);box-shadow:0 25px 70px rgba(0,0,0,.25);
+}
+footer{
+  margin-top:48px;padding:22px 16px;
+  background:linear-gradient(110deg,#10294f,#173b75);
+  border:0;color:#d4e1f3;
+}
+footer strong{color:#fff}
+.toast-bubble{border-radius:13px;box-shadow:0 12px 32px rgba(0,0,0,.2)}
+.lock-indicator,.badge-trade,.badge-type,.badge-college{border-radius:9px}
+@media(max-width:760px){
+  header{align-items:flex-start;gap:10px;padding:11px 13px}
+  .brand-box{gap:9px;min-width:0}
+  .brand-logo-icon{width:41px;height:41px;flex:0 0 41px}
+  .brand-text h1{font-size:.98rem;line-height:1.25}
+  .brand-text p{font-size:.68rem;line-height:1.3;margin-top:3px}
+  .header-actions{gap:5px;flex-wrap:wrap;justify-content:flex-end}
+  .btn-admin-portal{font-size:.72rem;padding:8px 9px}
+  .user-status-pill{font-size:.72rem;padding:5px 8px}
+  .main-container{margin:16px auto;padding:0 11px}
+  .login-wrapper{grid-template-columns:1fr;gap:15px;margin:14px auto 20px}
+  .glass-card{padding:21px 18px;border-radius:18px}
+  #frontLoginSection::after{font-size:.82rem;margin:-7px 0 19px}
+  .controls-card{align-items:flex-start}
+  .controls-left,.controls-right{width:100%}
+  .controls-right{justify-content:flex-start}
+  .table-shell{max-height:68vh}
+  .section-bar-title{font-size:.92rem}
+  .modal-content{width:94%;max-height:88vh}
+  footer{font-size:.78rem;margin-top:30px}
+}
+@media(max-width:420px){
+  .brand-text p{max-width:205px}
+  .btn-admin-portal{max-width:130px;line-height:1.2}
+  .input-group input,.input-group select{font-size:16px}
+  .app-btn{padding:8px 10px;font-size:.76rem}
+}
+@media print{
+  body{background:#fff}
+  header,footer,.btn-admin-portal,.header-actions{box-shadow:none}
+  .glass-card,.table-shell,.scorecard-box{box-shadow:none}
+}
+
     </style>
 </head>
 <body>
