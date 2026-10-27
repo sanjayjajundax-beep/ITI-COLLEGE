@@ -2535,87 +2535,130 @@ window.__itiLoginClick = async function(ev) {
 
         // One login endpoint for every account type. Role is derived from stored account records.
         async function handleUnifiedLogin(e) {
-            e.preventDefault();
+            if (e && typeof e.preventDefault === 'function') e.preventDefault();
             const loginButton = document.getElementById('unifiedLoginButton');
             if (loginButton) loginButton.disabled = true;
+            const id = document.getElementById('unifiedLoginId').value.trim();
+            const pass = document.getElementById('unifiedLoginPass').value;
+
             try {
-                // पुराना अकाउंट/यूज़र डेटा Firebase से आने तक credentials जाँचें नहीं।
+                // ADMIN: सीधे नए iti-kotri-new Firebase Authentication से लॉगिन।
+                // Admin के लिए पुराने Firebase के adminCreds की जाँच आवश्यक नहीं है।
+                if (id.includes('@')) {
+                    try {
+                        await copaAuth.signInWithEmailAndPassword(id, pass);
+                        currentRole = 'admin';
+                        currentCollegeId = null;
+                        currentTrade = null;
+                        loggedInStudent = null;
+                        loggedInSuperintendent = null;
+                        loggedInInstructor = null;
+
+                        // नए Firebase से COPA डेटा पढ़ें; पुराने कॉलेजों का listener
+                        // अलग से background में चलता रहेगा और लॉगिन को नहीं रोकेगा।
+                        try {
+                            const snap = await copaRtdb.ref('portal_data').once('value');
+                            const newData = snap.val() || {};
+                            COPA_SPLIT_BRANCHES.forEach(branch => {
+                                const value = getNested(newData, branch + '/COL01/COPA');
+                                if (value !== undefined) putNested(appData, branch + '/COL01/COPA', value);
+                            });
+                            copaCloudReady = true;
+                            saveLocalCache();
+                        } catch (readErr) {
+                            console.error('New Firebase data read failed:', readErr);
+                            alert('नए Firebase में लॉगिन सफल है, लेकिन COPA डेटा पढ़ने में समस्या है: ' + (readErr.message || readErr));
+                        }
+
+                        setupUIRoute();
+                        renderAdminView();
+                        updateAdminSessionBadge();
+                        document.getElementById('unifiedLoginPass').value = '';
+                        showToast('नए iti-kotri-new Firebase से Admin लॉगिन सफल!');
+                        return;
+                    } catch (authErr) {
+                        console.error('New Firebase Admin login failed:', authErr);
+                        let msg = authErr && authErr.code ? authErr.code : (authErr.message || 'Authentication failed');
+                        if (msg === 'auth/user-not-found' || msg === 'auth/invalid-credential') msg = 'इस ईमेल/पासवर्ड का अकाउंट नए Firebase Authentication में नहीं मिला।';
+                        else if (msg === 'auth/wrong-password' || msg === 'auth/invalid-password') msg = 'नए Firebase Admin का पासवर्ड गलत है।';
+                        else if (msg === 'auth/invalid-email') msg = 'Admin लॉगिन आईडी में नए Firebase Authentication वाला ईमेल दर्ज करें।';
+                        else if (msg === 'auth/too-many-requests') msg = 'बहुत बार प्रयास हुए हैं। कुछ समय बाद फिर प्रयास करें।';
+                        alert('नए Firebase (iti-kotri-new) में Admin लॉगिन विफल: ' + msg);
+                        return;
+                    }
+                }
+
+                // अन्य भूमिकाएँ (अधीक्षक/ग्रुप इंस्ट्रक्टर/इंस्ट्रक्टर/विद्यार्थी)
+                // फिलहाल उनके मौजूदा रिकॉर्ड पुराने Firebase से ही आते हैं।
                 if (!legacyCloudReady) {
                     await Promise.race([
                         legacyCloudReadyPromise,
-                        new Promise((_, reject) => setTimeout(() => reject(new Error('पुराने Firebase से डेटा आने में समय लग रहा है। इंटरनेट और Firebase Rules जाँचें।')), 10000))
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('पुराने कॉलेज/ट्रेड के अकाउंट डेटा का इंतज़ार समय पूरा हुआ।')), 10000))
                     ]);
                 }
                 if (legacyCloudError) throw legacyCloudError;
-            } catch (loadError) {
-                alert('लॉगिन से पहले अकाउंट डेटा लोड नहीं हुआ: ' + (loadError.message || loadError));
-                if (loginButton) loginButton.disabled = false;
-                return;
-            }
-            const id = document.getElementById('unifiedLoginId').value.trim();
-            const pass = document.getElementById('unifiedLoginPass').value;
-            const matches = [];
-            const adminId = (appData.adminCreds && appData.adminCreds.id) ? String(appData.adminCreds.id) : 'superadmin';
-            const adminPass = (appData.adminCreds && appData.adminCreds.pass) ? String(appData.adminCreds.pass) : 'admin@123';
-            if (id === adminId && pass === adminPass) matches.push({role:'admin'});
 
-            ensureSuperintendentStore().forEach(a => {
-                if (a.active !== false && String(a.id).trim() === id && String(a.pass) === pass)
-                    matches.push({role:'superintendent', collegeId:a.collegeId, account:a});
-            });
-            ensureGroupInstructorStore().forEach(a => {
-                if (a.active !== false && String(a.id).trim() === id && String(a.pass) === pass)
-                    matches.push({role:'groupInstructor', collegeId:a.collegeId, account:a});
-            });
-            getInstructorsList().forEach(a => {
-                if (String(a.id).trim() === id && String(a.pass).trim() === pass)
-                    matches.push({role:'instructor', collegeId:a.collegeId || 'COL01', trade:String(a.trade||'').trim(), account:a});
-            });
-            (getCollegesList() || []).forEach(c => {
-                (Array.isArray(appData.trades) ? appData.trades : []).forEach(t => {
-                    getStudentList(c.id, t).forEach(st => {
-                        if (String(st.studentId).trim().toLowerCase() === id.toLowerCase() && String(st.password).trim() === pass)
-                            matches.push({role:'student', collegeId:c.id, trade:t, account:st});
+                const matches = [];
+                const adminId = (appData.adminCreds && appData.adminCreds.id) ? String(appData.adminCreds.id) : 'superadmin';
+                const adminPass = (appData.adminCreds && appData.adminCreds.pass) ? String(appData.adminCreds.pass) : 'admin@123';
+                if (id === adminId && pass === adminPass) {
+                    alert('Admin लॉगिन अब नए Firebase Authentication से होगा। कृपया नए Firebase में बनाया गया Admin ईमेल और पासवर्ड दर्ज करें।');
+                    return;
+                }
+                ensureSuperintendentStore().forEach(a => {
+                    if (a.active !== false && String(a.id).trim() === id && String(a.pass) === pass)
+                        matches.push({role:'superintendent', collegeId:a.collegeId, account:a});
+                });
+                ensureGroupInstructorStore().forEach(a => {
+                    if (a.active !== false && String(a.id).trim() === id && String(a.pass) === pass)
+                        matches.push({role:'groupInstructor', collegeId:a.collegeId, account:a});
+                });
+                getInstructorsList().forEach(a => {
+                    if (String(a.id).trim() === id && String(a.pass).trim() === pass)
+                        matches.push({role:'instructor', collegeId:a.collegeId || 'COL01', trade:String(a.trade||'').trim(), account:a});
+                });
+                (getCollegesList() || []).forEach(c => {
+                    (Array.isArray(appData.trades) ? appData.trades : []).forEach(t => {
+                        getStudentList(c.id, t).forEach(st => {
+                            if (String(st.studentId).trim().toLowerCase() === id.toLowerCase() && String(st.password).trim() === pass)
+                                matches.push({role:'student', collegeId:c.id, trade:t, account:st});
+                        });
                     });
                 });
-            });
 
-            if (matches.length === 0) {
-                alert('लॉगिन आईडी या पासवर्ड गलत है। कृपया सही विवरण दर्ज करें।');
-                if (loginButton) loginButton.disabled = false;
-                return;
-            }
-            if (matches.length > 1) {
-                alert('यह लॉगिन आईडी एक से अधिक अकाउंट में मिली है। कृपया एडमिन से अलग और यूनिक लॉगिन आईडी बनवाएँ।');
-                if (loginButton) loginButton.disabled = false;
-                return;
-            }
+                if (matches.length === 0) {
+                    alert('लॉगिन आईडी या पासवर्ड गलत है। कृपया सही विवरण दर्ज करें।');
+                    return;
+                }
+                if (matches.length > 1) {
+                    alert('यह लॉगिन आईडी एक से अधिक अकाउंट में मिली है। कृपया एडमिन से अलग और यूनिक लॉगिन आईडी बनवाएँ।');
+                    return;
+                }
 
-            const m = matches[0];
-            currentRole = m.role;
-            currentCollegeId = m.collegeId || null;
-            currentTrade = m.trade || null;
-            if (m.role === 'admin') {
-                const authenticated = await requireCopaAdminAuth();
-                if (!authenticated) { if (loginButton) loginButton.disabled = false; return; }
-                loggedInStudent = null; loggedInSuperintendent = null; loggedInInstructor = null;
-                setupUIRoute(); renderAdminView(); updateAdminSessionBadge();
-                showToast('सुपर एडमिन लॉगिन सफल! (COPA Firebase सुरक्षित)');
-            } else if (m.role === 'instructor') {
-                loggedInInstructor = m.account;
-                setupUIRoute(); renderRegister(); renderEvaluationTable();
-                showToast(`${getCollegeName(currentCollegeId)} - ${currentTrade} अनुदेशक लॉगिन सफल!`);
-            } else if (m.role === 'student') {
-                loggedInStudent = m.account;
-                setupUIRoute();
-                showToast(`स्वागतम्, ${m.account.name}!`);
-            } else {
-                loggedInSuperintendent = m.account;
-                setupUIRoute();
-                showToast(`${m.role === 'groupInstructor' ? 'ग्रुप इंस्ट्रक्टर' : 'अधीक्षक'} लॉगिन सफल!`);
+                const m = matches[0];
+                currentRole = m.role;
+                currentCollegeId = m.collegeId || null;
+                currentTrade = m.trade || null;
+                if (m.role === 'instructor') {
+                    loggedInInstructor = m.account;
+                    setupUIRoute(); renderRegister(); renderEvaluationTable();
+                    showToast(`${getCollegeName(currentCollegeId)} - ${currentTrade} अनुदेशक लॉगिन सफल!`);
+                } else if (m.role === 'student') {
+                    loggedInStudent = m.account;
+                    setupUIRoute();
+                    showToast(`स्वागतम्, ${m.account.name}!`);
+                } else {
+                    loggedInSuperintendent = m.account;
+                    setupUIRoute();
+                    showToast(`${m.role === 'groupInstructor' ? 'ग्रुप इंस्ट्रक्टर' : 'अधीक्षक'} लॉगिन सफल!`);
+                }
+                document.getElementById('unifiedLoginPass').value = '';
+            } catch (err) {
+                console.error('Unified login error:', err);
+                alert('लॉगिन में समस्या: ' + (err.message || err));
+            } finally {
+                if (loginButton) loginButton.disabled = false;
             }
-            document.getElementById('unifiedLoginPass').value = '';
-            if (loginButton) loginButton.disabled = false;
         }
 
         async function handleAdminLogin(e) {
