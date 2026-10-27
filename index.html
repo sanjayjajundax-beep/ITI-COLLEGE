@@ -1849,6 +1849,11 @@ window.__itiLoginClick = async function(ev) {
         // पुराना Firebase: सभी कॉलेज/ट्रेड (COL01-COPA को छोड़कर)
         firebase.initializeApp(firebaseConfig);
         const rtdb = firebase.database();
+        // लॉगिन से पहले पुराने Firebase का अकाउंट डेटा आने की प्रतीक्षा करें।
+        let legacyCloudReady = false;
+        let legacyCloudError = null;
+        let resolveLegacyCloudReady;
+        const legacyCloudReadyPromise = new Promise(resolve => { resolveLegacyCloudReady = resolve; });
 
         // नया Firebase: केवल COL01 / COPA
         const copaFirebaseConfig = {
@@ -2531,6 +2536,22 @@ window.__itiLoginClick = async function(ev) {
         // One login endpoint for every account type. Role is derived from stored account records.
         async function handleUnifiedLogin(e) {
             e.preventDefault();
+            const loginButton = document.getElementById('unifiedLoginButton');
+            if (loginButton) loginButton.disabled = true;
+            try {
+                // पुराना अकाउंट/यूज़र डेटा Firebase से आने तक credentials जाँचें नहीं।
+                if (!legacyCloudReady) {
+                    await Promise.race([
+                        legacyCloudReadyPromise,
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('पुराने Firebase से डेटा आने में समय लग रहा है। इंटरनेट और Firebase Rules जाँचें।')), 10000))
+                    ]);
+                }
+                if (legacyCloudError) throw legacyCloudError;
+            } catch (loadError) {
+                alert('लॉगिन से पहले अकाउंट डेटा लोड नहीं हुआ: ' + (loadError.message || loadError));
+                if (loginButton) loginButton.disabled = false;
+                return;
+            }
             const id = document.getElementById('unifiedLoginId').value.trim();
             const pass = document.getElementById('unifiedLoginPass').value;
             const matches = [];
@@ -2561,10 +2582,12 @@ window.__itiLoginClick = async function(ev) {
 
             if (matches.length === 0) {
                 alert('लॉगिन आईडी या पासवर्ड गलत है। कृपया सही विवरण दर्ज करें।');
+                if (loginButton) loginButton.disabled = false;
                 return;
             }
             if (matches.length > 1) {
                 alert('यह लॉगिन आईडी एक से अधिक अकाउंट में मिली है। कृपया एडमिन से अलग और यूनिक लॉगिन आईडी बनवाएँ।');
+                if (loginButton) loginButton.disabled = false;
                 return;
             }
 
@@ -2574,7 +2597,7 @@ window.__itiLoginClick = async function(ev) {
             currentTrade = m.trade || null;
             if (m.role === 'admin') {
                 const authenticated = await requireCopaAdminAuth();
-                if (!authenticated) return;
+                if (!authenticated) { if (loginButton) loginButton.disabled = false; return; }
                 loggedInStudent = null; loggedInSuperintendent = null; loggedInInstructor = null;
                 setupUIRoute(); renderAdminView(); updateAdminSessionBadge();
                 showToast('सुपर एडमिन लॉगिन सफल! (COPA Firebase सुरक्षित)');
@@ -2592,6 +2615,7 @@ window.__itiLoginClick = async function(ev) {
                 showToast(`${m.role === 'groupInstructor' ? 'ग्रुप इंस्ट्रक्टर' : 'अधीक्षक'} लॉगिन सफल!`);
             }
             document.getElementById('unifiedLoginPass').value = '';
+            if (loginButton) loginButton.disabled = false;
         }
 
         async function handleAdminLogin(e) {
@@ -4362,6 +4386,12 @@ window.__itiLoginClick = async function(ev) {
                     if (currentRole === 'superintendent' || currentRole === 'groupInstructor') renderSuperintendentDashboard();
                     if (currentRole === 'student') renderStudentDashboard();
                 }
+                legacyCloudReady = true;
+                resolveLegacyCloudReady(true);
+            }, (error) => {
+                legacyCloudError = error || new Error('पुराने Firebase से डेटा पढ़ने में समस्या।');
+                legacyCloudReady = true;
+                resolveLegacyCloudReady(false);
             });
             // नए Firebase से केवल COL01/COPA की migrated branches पढ़ें
             copaRtdb.ref('portal_data').on('value', (snapshot) => {
