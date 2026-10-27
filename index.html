@@ -1769,8 +1769,68 @@
             measurementId: "G-EKQGGRV69Y"
         };
 
+        // पुराना Firebase: सभी कॉलेज/ट्रेड (COL01-COPA को छोड़कर)
         firebase.initializeApp(firebaseConfig);
         const rtdb = firebase.database();
+
+        // नया Firebase: केवल COL01 / COPA
+        const copaFirebaseConfig = {
+            apiKey: "AIzaSyC6NjUUN_cKegCn_U3fexCRAZ_3hH7cH70",
+            authDomain: "iti-kotri-new.firebaseapp.com",
+            databaseURL: "https://iti-kotri-new-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "iti-kotri-new",
+            storageBucket: "iti-kotri-new.firebasestorage.app",
+            messagingSenderId: "737773474172",
+            appId: "1:737773474172:web:dd6621ed4e609e8cf454f9",
+            measurementId: "G-LPWV1CMK9W"
+        };
+        const copaFirebaseApp = firebase.initializeApp(copaFirebaseConfig, 'COPA_NEW');
+        const copaRtdb = copaFirebaseApp.database();
+        const copaAuth = copaFirebaseApp.auth();
+        let copaCloudReady = false;
+        let copaWriteWarningShown = false;
+
+        const COPA_SPLIT_BRANCHES = ['students', 'records', 'evaluations', 'holidays', 'maxMarksConfig'];
+        function cloneJson(value) { return JSON.parse(JSON.stringify(value || {})); }
+        function getNested(obj, path) { return path.split('/').reduce((v, k) => v && v[k], obj); }
+        function putNested(obj, path, value) {
+            const keys = path.split('/'); let node = obj;
+            keys.slice(0, -1).forEach(k => { if (!node[k] || typeof node[k] !== 'object') node[k] = {}; node = node[k]; });
+            node[keys[keys.length - 1]] = value;
+        }
+        function removeNested(obj, path) {
+            const keys = path.split('/'); let node = obj;
+            for (const k of keys.slice(0, -1)) { if (!node || typeof node !== 'object') return; node = node[k]; }
+            if (node && typeof node === 'object') delete node[keys[keys.length - 1]];
+        }
+        function oldDatabasePayload() {
+            const payload = cloneJson(appData);
+            COPA_SPLIT_BRANCHES.forEach(branch => removeNested(payload, branch + '/COL01/COPA'));
+            return payload;
+        }
+        function copaDatabasePayload() {
+            const payload = {};
+            COPA_SPLIT_BRANCHES.forEach(branch => {
+                const value = getNested(appData, branch + '/COL01/COPA');
+                if (value !== undefined) putNested(payload, branch + '/COL01/COPA', cloneJson(value));
+            });
+            return payload;
+        }
+        async function requireCopaAdminAuth() {
+            if (copaAuth.currentUser) return true;
+            const email = prompt('नए COPA Firebase के Admin का Email दर्ज करें:');
+            if (!email) return false;
+            const password = prompt('नए COPA Firebase Admin का Password दर्ज करें (यह सेव नहीं होगा):');
+            if (!password) return false;
+            try {
+                await copaAuth.signInWithEmailAndPassword(email.trim(), password);
+                return true;
+            } catch (err) {
+                console.error('COPA Admin authentication failed:', err);
+                alert('नए COPA Firebase में Admin Authentication विफल। Email/Password और Auth account जाँचें।');
+                return false;
+            }
+        }
 
         let appData = {
             adminCreds: { id: "superadmin", pass: "admin@123" },
@@ -2442,7 +2502,7 @@
         // ==================== AUTHENTICATION ====================
 
         // One login endpoint for every account type. Role is derived from stored account records.
-        function handleUnifiedLogin(e) {
+        async function handleUnifiedLogin(e) {
             e.preventDefault();
             const id = document.getElementById('unifiedLoginId').value.trim();
             const pass = document.getElementById('unifiedLoginPass').value;
@@ -2486,9 +2546,11 @@
             currentCollegeId = m.collegeId || null;
             currentTrade = m.trade || null;
             if (m.role === 'admin') {
+                const authenticated = await requireCopaAdminAuth();
+                if (!authenticated) return;
                 loggedInStudent = null; loggedInSuperintendent = null; loggedInInstructor = null;
                 setupUIRoute(); renderAdminView(); updateAdminSessionBadge();
-                showToast('सुपर एडमिन लॉगिन सफल!');
+                showToast('सुपर एडमिन लॉगिन सफल! (COPA Firebase सुरक्षित)');
             } else if (m.role === 'instructor') {
                 loggedInInstructor = m.account;
                 setupUIRoute(); renderRegister(); renderEvaluationTable();
@@ -2505,7 +2567,7 @@
             document.getElementById('unifiedLoginPass').value = '';
         }
 
-        function handleAdminLogin(e) {
+        async function handleAdminLogin(e) {
             e.preventDefault();
             const id = document.getElementById('adminId').value.trim();
             const pass = document.getElementById('adminPass').value.trim();
@@ -2514,6 +2576,8 @@
             const currentAdminPass = (appData.adminCreds && appData.adminCreds.pass) ? appData.adminCreds.pass : "admin@123";
 
             if (id === currentAdminId && pass === currentAdminPass) {
+                const authenticated = await requireCopaAdminAuth();
+                if (!authenticated) return;
                 currentRole = 'admin';
                 closeModal('adminLoginModal');
                 setupUIRoute();
@@ -4224,6 +4288,7 @@
         }
 
         function listenToCloudData() {
+            // पुराने Firebase से शेष कॉलेज/ट्रेड का डेटा
             rtdb.ref('portal_data').on('value', (snapshot) => {
                 const cloudVal = snapshot.val();
                 if (cloudVal) {
@@ -4271,16 +4336,51 @@
                     if (currentRole === 'student') renderStudentDashboard();
                 }
             });
+            // नए Firebase से केवल COL01/COPA की migrated branches पढ़ें
+            copaRtdb.ref('portal_data').on('value', (snapshot) => {
+                const cloudVal = snapshot.val() || {};
+                COPA_SPLIT_BRANCHES.forEach(branch => {
+                    const value = getNested(cloudVal, branch + '/COL01/COPA');
+                    if (value !== undefined) putNested(appData, branch + '/COL01/COPA', value);
+                });
+                copaCloudReady = true;
+                saveLocalCache();
+                if (currentRole === 'admin') renderAdminView();
+                if (currentRole === 'instructor' && currentCollegeId === 'COL01' && currentTrade === 'COPA') {
+                    renderRegister(); renderEvaluationTable(); renderStudentCredentialsModalTable();
+                }
+                if (currentRole === 'student' && currentCollegeId === 'COL01' && currentTrade === 'COPA') renderStudentDashboard();
+            });
         }
 
         async function syncWithFirebase() {
             saveLocalCache();
+            // COPA के non-admin users को नए Firebase में अलग Auth account मिलने तक
+            // किसी भी cloud DB में COPA बदलाव न लिखें (पुराना डेटा भी overwrite न हो)।
+            if (currentCollegeId === 'COL01' && currentTrade === 'COPA' && !copaAuth.currentUser) {
+                if (!copaWriteWarningShown) {
+                    copaWriteWarningShown = true;
+                    showToast("COPA सेव रोक दिया गया: इस उपयोगकर्ता का Firebase Auth अकाउंट अभी नहीं जुड़ा है।");
+                }
+                return;
+            }
             try {
-                await rtdb.ref('portal_data').set(appData);
-                showToast("Firebase Cloud पर डेटा सुरक्षित हो गया!");
+                // पुराने Firebase में COL01/COPA branches कभी वापस नहीं लिखें
+                await rtdb.ref('portal_data').set(oldDatabasePayload());
+                // नए Firebase में केवल पाँच COPA branches लिखें; Auth के बिना write नहीं होगा
+                const copaPayload = copaDatabasePayload();
+                if (copaAuth.currentUser && Object.keys(copaPayload).length) {
+                    await copaRtdb.ref('portal_data').update(copaPayload);
+                    showToast("पुराना डेटा और COL01/COPA डेटा सुरक्षित हो गया!");
+                } else if (Object.keys(copaPayload).length && !copaWriteWarningShown) {
+                    copaWriteWarningShown = true;
+                    showToast("अन्य डेटा सेव हुआ। COPA बदलाव के लिए अधिकृत Firebase Auth आवश्यक है।");
+                } else {
+                    showToast("पुराने Firebase पर डेटा सुरक्षित हो गया!");
+                }
             } catch (e) {
-                console.error("Firebase error", e);
-                showToast("लोकल सुरक्षित हुआ, Firebase सिंक में त्रुटि!");
+                console.error("Firebase sync error", e);
+                showToast("लोकल सुरक्षित हुआ, Firebase सिंक में त्रुटि! Rules/Auth जाँचें।");
             }
         }
 
