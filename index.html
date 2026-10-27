@@ -734,7 +734,7 @@
 <div class="glass-card card-instructor" style="width:100%;">
 <div class="card-header-icon"><i class="fa-solid fa-right-to-bracket"></i></div>
 <h2 class="form-title">एकीकृत लॉगिन पोर्टल</h2>
-<form autocomplete="off" onsubmit="handleUnifiedLogin(event)">
+<form id="unifiedLoginForm" autocomplete="off" onsubmit="handleUnifiedLogin(event)" style="position:relative;z-index:10;pointer-events:auto;">
 <div class="input-group">
 <label for="unifiedLoginId"><i class="fa-solid fa-id-badge"></i> लॉगिन आईडी</label>
 <input autocomplete="username" id="unifiedLoginId" placeholder="अपनी लॉगिन आईडी दर्ज करें" required type="text"/>
@@ -743,7 +743,7 @@
 <label for="unifiedLoginPass"><i class="fa-solid fa-key"></i> पासवर्ड</label>
 <input autocomplete="current-password" id="unifiedLoginPass" placeholder="अपना पासवर्ड दर्ज करें" required type="password"/>
 </div>
-<button class="btn-submit btn-inst-submit" type="submit"><i class="fa-solid fa-lock-open"></i> लॉगिन करें</button>
+<button id="unifiedLoginButton" class="btn-submit btn-inst-submit" type="submit" style="position:relative;z-index:20;pointer-events:auto;touch-action:manipulation;cursor:pointer;"><i class="fa-solid fa-lock-open"></i> लॉगिन करें</button>
 </form>
 <div class="login-developer-credit" style="margin-top:42px;padding:18px 8px 4px;text-align:center;color:#17459a;font-weight:700;font-size:1rem;border-top:1px solid #d7e0ee;">
 डेवलपर संजय जाजुन्दा
