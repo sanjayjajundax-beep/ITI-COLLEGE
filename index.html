@@ -705,6 +705,59 @@
 </style>
 
 <script>
+        // appData को Firebase/helper functions से पहले initialize करें ताकि TDZ error न आए.
+        let appData = {
+            adminCreds: { id: "superadmin", pass: "admin@123" },
+            superintendents: [],
+            superintendentData: { inspections: [], tasks: [], reports: [], auditLog: [], notices: [], assets: [] },
+            colleges: [
+                { id: "COL01", name: "राजकीय औद्योगिक प्रशिक्षण संस्थान, कोटड़ी" },
+                { id: "COL02", name: "राजकीय औद्योगिक प्रशिक्षण संस्थान, भीलवाड़ा" }
+            ],
+            instituteSettings: {
+                name: "राजकीय औद्योगिक प्रशिक्षण संस्थान, कोटड़ी",
+                code: "ITI-KOTRI-2026",
+                location: "कोटड़ी, भीलवाड़ा (राजस्थान)",
+                tagline: "छात्र उपस्थिति, टेस्ट एवं प्रगति मूल्यांकन पोर्टल",
+                logoUrl: "",
+                superintendentName: "श्री अधीक्षक महोदय",
+                superintendentTitle: "अधीक्षक / प्राचार्य",
+                superintendentSignUrl: ""
+            },
+            sessionConfig: {
+                startDate: "2026-08-10",
+                endDate: "2027-06-30"
+            },
+            freezeLocks: {}, 
+            archivedSessions: {},
+            trades: ["COPA", "Electrician", "Fitter"],
+            tradeTypes: {
+                "COPA": "non_engineering",
+                "Electrician": "engineering",
+                "Fitter": "engineering"
+            },
+            instructors: [
+                { id: "copa_inst", name: "संजय जाजुन्दा", pass: "copa123", trade: "COPA", collegeId: "COL01" },
+                { id: "elec_inst", name: "दिनेश सर (कोटड़ी)", pass: "elec123", trade: "Electrician", collegeId: "COL01" }
+            ],
+            students: {
+                "COL01": {
+                    "COPA": [
+                        { roll: "1", name: "राहुल शर्मा", admissionDate: "2026-08-10", studentId: "st101", password: "123", pastWorkingDays: 0, pastPresentDays: 0 },
+                        { roll: "2", name: "पूजा वर्मा", admissionDate: "2026-08-10", studentId: "st102", password: "123", pastWorkingDays: 0, pastPresentDays: 0 }
+                    ],
+                    "Electrician": [
+                        { roll: "1", name: "सुरेश गुर्जर", admissionDate: "2026-08-10", studentId: "el201", password: "123", pastWorkingDays: 0, pastPresentDays: 0 }
+                    ]
+                }
+            },
+            records: {},     
+            holidays: {},    
+            evaluations: {}, 
+            maxMarksConfig: {} 
+        };
+
+
 // Login tap diagnostic: this small independent handler runs even if the main app has an initialization error.
 window.__itiLoginClick = async function(ev) {
   try {
@@ -1856,56 +1909,6 @@ window.__itiLoginClick = async function(ev) {
             }
         }
 
-        let appData = {
-            adminCreds: { id: "superadmin", pass: "admin@123" },
-            superintendents: [],
-            superintendentData: { inspections: [], tasks: [], reports: [], auditLog: [], notices: [], assets: [] },
-            colleges: [
-                { id: "COL01", name: "राजकीय औद्योगिक प्रशिक्षण संस्थान, कोटड़ी" },
-                { id: "COL02", name: "राजकीय औद्योगिक प्रशिक्षण संस्थान, भीलवाड़ा" }
-            ],
-            instituteSettings: {
-                name: "राजकीय औद्योगिक प्रशिक्षण संस्थान, कोटड़ी",
-                code: "ITI-KOTRI-2026",
-                location: "कोटड़ी, भीलवाड़ा (राजस्थान)",
-                tagline: "छात्र उपस्थिति, टेस्ट एवं प्रगति मूल्यांकन पोर्टल",
-                logoUrl: "",
-                superintendentName: "श्री अधीक्षक महोदय",
-                superintendentTitle: "अधीक्षक / प्राचार्य",
-                superintendentSignUrl: ""
-            },
-            sessionConfig: {
-                startDate: "2026-08-10",
-                endDate: "2027-06-30"
-            },
-            freezeLocks: {}, 
-            archivedSessions: {},
-            trades: ["COPA", "Electrician", "Fitter"],
-            tradeTypes: {
-                "COPA": "non_engineering",
-                "Electrician": "engineering",
-                "Fitter": "engineering"
-            },
-            instructors: [
-                { id: "copa_inst", name: "संजय जाजुन्दा", pass: "copa123", trade: "COPA", collegeId: "COL01" },
-                { id: "elec_inst", name: "दिनेश सर (कोटड़ी)", pass: "elec123", trade: "Electrician", collegeId: "COL01" }
-            ],
-            students: {
-                "COL01": {
-                    "COPA": [
-                        { roll: "1", name: "राहुल शर्मा", admissionDate: "2026-08-10", studentId: "st101", password: "123", pastWorkingDays: 0, pastPresentDays: 0 },
-                        { roll: "2", name: "पूजा वर्मा", admissionDate: "2026-08-10", studentId: "st102", password: "123", pastWorkingDays: 0, pastPresentDays: 0 }
-                    ],
-                    "Electrician": [
-                        { roll: "1", name: "सुरेश गुर्जर", admissionDate: "2026-08-10", studentId: "el201", password: "123", pastWorkingDays: 0, pastPresentDays: 0 }
-                    ]
-                }
-            },
-            records: {},     
-            holidays: {},    
-            evaluations: {}, 
-            maxMarksConfig: {} 
-        };
 
         let currentRole = null;
         let currentCollegeId = null;
