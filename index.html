@@ -703,6 +703,29 @@
         .student-side-nav{display:flex;flex-direction:column;gap:7px;max-width:230px;float:left;margin:0 16px 16px 0}
         @media(max-width:760px){.role-sidebar-layout{grid-template-columns:108px minmax(0,1fr);gap:7px}.role-sidebar{top:75px;padding:6px;gap:5px;max-height:calc(100vh - 88px)}.role-side-heading{font-size:.72rem;padding:7px 3px 9px;line-height:1.25}.role-side-btn{font-size:.68rem!important;padding:9px 5px!important;min-height:38px;gap:5px!important;line-height:1.25}.role-side-btn i{width:14px;flex:0 0 14px}.role-dashboard-heading{padding:9px;font-size:.88rem}.student-side-nav{max-width:100%;float:none;margin:0 0 12px 0}}
 </style>
+
+<script>
+// Login tap diagnostic: this small independent handler runs even if the main app has an initialization error.
+window.__itiLoginClick = async function(ev) {
+  try {
+    if (ev && ev.preventDefault) ev.preventDefault();
+    var box = document.getElementById('loginDiagnosticMessage');
+    if (box) { box.style.color = '#1d4ed8'; box.textContent = 'बटन क्लिक हुआ — लॉगिन जाँच शुरू हो रही है…'; }
+    if (typeof window.handleUnifiedLogin !== 'function') {
+      if (box) { box.style.color = '#b91c1c'; box.textContent = 'त्रुटि: लॉगिन स्क्रिप्ट उपलब्ध नहीं है। पेज की JavaScript लोड नहीं हुई।'; }
+      return;
+    }
+    await window.handleUnifiedLogin({ preventDefault: function() {} });
+    if (box && box.textContent.indexOf('बटन क्लिक हुआ') === 0) {
+      box.style.color = '#15803d'; box.textContent = 'लॉगिन प्रक्रिया पूरी हुई।';
+    }
+  } catch (err) {
+    console.error('ITI login click error:', err);
+    var box = document.getElementById('loginDiagnosticMessage');
+    if (box) { box.style.color = '#b91c1c'; box.textContent = 'लॉगिन त्रुटि: ' + (err && err.message ? err.message : String(err)); }
+  }
+};
+</script>
 </head>
 <body>
 <!-- Header -->
@@ -743,7 +766,8 @@
 <label for="unifiedLoginPass"><i class="fa-solid fa-key"></i> पासवर्ड</label>
 <input autocomplete="current-password" id="unifiedLoginPass" placeholder="अपना पासवर्ड दर्ज करें" required type="password"/>
 </div>
-<button id="unifiedLoginButton" class="btn-submit btn-inst-submit" type="button" onclick="(async function(){try{if(typeof handleUnifiedLogin!=='function'){alert('लॉगिन स्क्रिप्ट लोड नहीं हुई। कृपया पेज रीफ्रेश करें।');return;}await handleUnifiedLogin({preventDefault:function(){}});}catch(err){console.error('Unified login error:',err);alert('लॉगिन में तकनीकी त्रुटि: '+(err&&err.message?err.message:String(err)));}})()" style="position:relative;z-index:20;pointer-events:auto;touch-action:manipulation;cursor:pointer;"><i class="fa-solid fa-lock-open"></i> लॉगिन करें</button>
+<button id="unifiedLoginButton" class="btn-submit btn-inst-submit" type="button" onclick="window.__itiLoginClick(event)" style="position:relative;z-index:20;pointer-events:auto;touch-action:manipulation;cursor:pointer;"><i class="fa-solid fa-lock-open"></i> लॉगिन करें</button>
+<div id="loginDiagnosticMessage" role="status" aria-live="polite" style="margin-top:10px;min-height:22px;text-align:center;font-size:13px;font-weight:700;color:#b91c1c;"></div>
 </form>
 <div class="login-developer-credit" style="margin-top:42px;padding:18px 8px 4px;text-align:center;color:#17459a;font-weight:700;font-size:1rem;border-top:1px solid #d7e0ee;">
 डेवलपर संजय जाजुन्दा
