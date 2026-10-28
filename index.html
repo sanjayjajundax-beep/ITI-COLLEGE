@@ -1,33 +1,123 @@
 <!doctype html>
 <html lang="hi">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ITI KOTRI — Secure Portal</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ITI KOTRI — समग्र प्रबंधन पोर्टल</title>
 <style>
-:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#172033;background:#f3f6fb}*{box-sizing:border-box}body{margin:0}.top{background:#123c68;color:white;padding:18px 22px}.top h1{margin:0;font-size:22px}.top p{margin:4px 0 0;color:#d9e8f7}.wrap{max-width:1100px;margin:24px auto;padding:0 14px}.panel{background:white;border:1px solid #e1e7ef;border-radius:14px;padding:20px;box-shadow:0 5px 22px #1720330b}.login{max-width:440px;margin:45px auto}.field{display:block;width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:9px;margin:7px 0 15px;font-size:16px}label{font-weight:600;font-size:14px}button{border:0;border-radius:9px;background:#1769aa;color:white;padding:11px 16px;font-size:15px;cursor:pointer}button.secondary{background:#e8eef6;color:#17324d}button.danger{background:#a52a2a}.muted{color:#64748b}.hidden{display:none!important}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.tile{padding:16px;border:1px solid #dce5ef;border-radius:11px;background:#fbfdff}.tile h3{margin:0 0 7px}.bar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:15px}.msg{padding:11px;border-radius:8px;background:#fff7df;color:#775500;margin:12px 0}.ok{background:#e7f8ee;color:#17643a}.error{background:#feecec;color:#8b1d1d}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f5f7fa;padding:12px;border-radius:8px;max-height:330px;overflow:auto}.small{font-size:13px}@media(max-width:600px){.wrap{margin:14px auto}.panel{padding:15px}}
+:root{--navy:#123b65;--blue:#1769aa;--bg:#f2f5fa;--line:#dce4ef;--ink:#172338;--muted:#64748b;--white:#fff;--green:#16834a;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans Devanagari",sans-serif}
+header{background:linear-gradient(110deg,#102f50,#1b5686);color:#fff;padding:18px max(18px,calc((100% - 1240px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:22px;margin:0}header p{margin:4px 0 0;color:#d9e8f7;font-size:14px}
+main{max-width:1240px;margin:22px auto;padding:0 16px}.hidden{display:none!important}
+.card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:20px;box-shadow:0 5px 22px #1720330a}
+.login{max-width:460px;margin:55px auto}.login h2{margin-top:0}.muted{color:var(--muted)}label{font-size:13px;font-weight:700;display:block;margin:12px 0 5px}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;font:inherit;color:var(--ink);min-width:0}
+textarea{min-height:90px;resize:vertical}button{border:0;border-radius:9px;background:var(--blue);color:#fff;padding:10px 15px;font:600 14px inherit;cursor:pointer}
+button:hover{filter:brightness(.95)}button:disabled{opacity:.55;cursor:wait}.secondary{background:#e8eef6;color:#17324d}.danger{background:#b42318}.success{background:#e9f8ef;color:#166534}
+.topline{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:15px}
+.identity{font-size:14px;color:var(--muted)}.notice{padding:11px 14px;border-radius:9px;background:#fff6dc;color:#795500;margin:12px 0}.notice.ok{background:#e9f8ef;color:#166534}.notice.err{background:#feeceb;color:#9b1c16}
+.scope{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end}.scope label{margin-top:0}
+.layout{display:grid;grid-template-columns:245px minmax(0,1fr);gap:16px;margin-top:16px}
+.sidebar{align-self:start;position:sticky;top:12px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}
+.sidebar h3{font-size:14px;color:var(--navy);margin:5px 8px 10px}.nav{width:100%;text-align:left;background:transparent;color:#26364c;margin:3px 0;padding:11px 10px;border-radius:8px;font-weight:600}.nav.active,.nav:hover{background:#eaf2fb;color:#12568d}
+.content{min-width:0}.hero{padding:18px 20px;margin-bottom:14px;background:#fff;border:1px solid var(--line);border-radius:14px}.hero h2{margin:0 0 4px;font-size:21px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px}.stat b{font-size:22px;display:block;color:var(--navy)}.stat span{font-size:12px;color:var(--muted)}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.section-head h3{margin:0}
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}.formgrid .wide{grid-column:1/-1}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.tablewrap{overflow:auto;margin-top:15px;border:1px solid var(--line);border-radius:10px}table{border-collapse:collapse;width:100%;min-width:620px;background:#fff}th,td{padding:10px 11px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}th{background:#f3f7fc;color:#334155}tr:last-child td{border-bottom:0}
+.empty{padding:22px;text-align:center;color:var(--muted)}.pill{display:inline-block;border-radius:99px;background:#eaf2fb;color:#185487;padding:4px 9px;font-size:12px;font-weight:700}
+footer{text-align:center;color:#778397;font-size:12px;padding:25px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.sidebar{position:static}.navlist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){main{margin:12px auto;padding:0 10px}.card{padding:15px}.scope,.formgrid{grid-template-columns:1fr}.formgrid .wide{grid-column:auto}.stats{gap:7px}.stat{padding:10px}header h1{font-size:19px}}
 </style>
 </head>
 <body>
-<header class="top"><h1>ITI KOTRI — Secure Portal</h1><p>एकीकृत लॉगिन • Admin • Instructor • Student</p></header>
-<main class="wrap">
-<section id="login" class="panel login"><h2>लॉगिन</h2><p class="muted">अपने अधिकृत ईमेल और पासवर्ड से लॉगिन करें।</p><form id="loginForm"><label>ईमेल</label><input class="field" id="email" type="email" autocomplete="username" required><label>पासवर्ड</label><input class="field" id="password" type="password" autocomplete="current-password" required><button type="submit">लॉगिन करें</button></form><div id="loginMsg" class="msg hidden"></div></section>
-<section id="app" class="hidden"><div class="bar"><div><h2 id="welcome">डैशबोर्ड</h2><div id="who" class="muted small"></div></div><button id="logout" class="secondary">लॉगआउट</button></div><div id="setupMsg" class="msg hidden"></div><div id="adminSetup" class="panel hidden"><h3>कॉलेज / ट्रेड चुनें</h3><p class="muted">Admin के लिए डेटा देखने या जोड़ने हेतु IDs दर्ज करें। IDs में अंग्रेज़ी अक्षर, अंक, _ या - रखें।</p><label>College ID</label><input id="collegeId" class="field" placeholder="college01"><label>Trade ID</label><input id="tradeId" class="field" placeholder="electrician"><button id="setScope">लागू करें</button></div><div id="modules" class="grid" style="margin-top:14px"></div><section id="workspace" class="panel hidden" style="margin-top:16px"><div class="bar"><h3 id="moduleTitle">मॉड्यूल</h3><button id="refresh" class="secondary">रीफ्रेश</button></div><form id="recordForm"><label>रिकॉर्ड का विवरण</label><textarea id="recordData" class="field" rows="5" placeholder='उदाहरण: {"name":"विद्यार्थी का नाम","class":"Electrician"}' required></textarea><button type="submit">रिकॉर्ड सेव करें</button></form><div id="dataMsg" class="msg hidden"></div><h4>मौजूदा रिकॉर्ड</h4><pre id="records">अभी कोई रिकॉर्ड लोड नहीं हुआ।</pre></section></section>
+<header><div><h1>ITI KOTRI — समग्र प्रबंधन पोर्टल</h1><p>एकीकृत लॉगिन • Admin • Instructor • Student</p></div><span class="pill" style="background:#ffffff22;color:white">Secure Portal</span></header>
+<main>
+<section id="loginPanel" class="card login">
+<h2>स्वागत है</h2><p class="muted">अपने अधिकृत Firebase ईमेल और पासवर्ड से लॉगिन करें।</p>
+<form id="loginForm">
+<label for="email">ईमेल आईडी</label><input id="email" type="email" autocomplete="username" required>
+<label for="password">पासवर्ड</label><input id="password" type="password" autocomplete="current-password" required>
+<div class="actions"><button id="loginBtn" type="submit">लॉगिन करें</button></div>
+</form><div id="loginMsg" class="notice hidden"></div>
+<div style="text-align:center;margin-top:26px;color:#1d4d7b;font-weight:700">डेवलपर संजय जाजुन्दा</div>
+</section>
+
+<section id="appPanel" class="hidden">
+<div class="topline"><div><h2 id="welcome" style="margin:0 0 4px">डैशबोर्ड</h2><div id="identity" class="identity"></div></div><button id="logoutBtn" class="secondary">लॉगआउट</button></div>
+<div id="statusMsg" class="notice hidden"></div>
+<section id="scopePanel" class="card hidden">
+<div class="section-head"><div><h3>कॉलेज और ट्रेड चुनें</h3><div class="muted" style="font-size:13px">जिस कॉलेज और ट्रेड का रिकॉर्ड खोलना है, उसकी ID दर्ज करें।</div></div></div>
+<div class="scope"><div><label for="collegeId">College ID</label><input id="collegeId" value="college01" placeholder="college01"></div><div><label for="tradeId">Trade ID</label><input id="tradeId" value="electrician" placeholder="electrician"></div><button id="applyScope">लागू करें</button></div>
+</section>
+<div class="layout">
+<aside class="sidebar"><h3>मुख्य मेन्यू</h3><div id="navList" class="navlist"></div></aside>
+<div class="content">
+<div class="hero"><h2 id="moduleHeading">डैशबोर्ड</h2><div id="moduleSub" class="muted">मॉड्यूल चुनें और काम शुरू करें।</div></div>
+<div class="stats" id="stats">
+<div class="stat"><b id="statRole">—</b><span>आपकी भूमिका</span></div><div class="stat"><b id="statCollege">—</b><span>कॉलेज ID</span></div><div class="stat"><b id="statTrade">—</b><span>ट्रेड ID</span></div><div class="stat"><b id="statCount">0</b><span>लोड रिकॉर्ड</span></div>
+</div>
+<section id="workspace" class="card">
+<div class="section-head"><h3 id="formHeading">रिकॉर्ड जोड़ें</h3><button id="refreshBtn" class="secondary">रीफ्रेश</button></div>
+<form id="recordForm"><div id="fields" class="formgrid"></div><div class="actions"><button id="saveBtn" type="submit">सुरक्षित करें</button><button id="clearBtn" type="button" class="secondary">फॉर्म साफ करें</button></div></form>
+<div id="dataMsg" class="notice hidden"></div>
+<div class="section-head" style="margin-top:24px"><h3>मौजूदा रिकॉर्ड</h3><span id="recordCount" class="pill">0 रिकॉर्ड</span></div>
+<div id="records" class="tablewrap"><div class="empty">रिकॉर्ड लोड हो रहे हैं…</div></div>
+</section>
+</div></div>
+</section>
 </main>
+<footer>ITI KOTRI • डेवलपर संजय जाजुन्दा</footer>
 <script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 const firebaseConfig={apiKey:'AIzaSyASnRlqPhu4BnsJmHUNRaNyY21fEmh9b6g',authDomain:'iti-kotri-bbfc9.firebaseapp.com',databaseURL:'https://iti-kotri-bbfc9-default-rtdb.asia-southeast1.firebasedatabase.app',projectId:'iti-kotri-bbfc9',storageBucket:'iti-kotri-bbfc9.firebasestorage.app',messagingSenderId:'311138809542',appId:'1:311138809542:web:7f7d6d06a523fc7ade09c7'};
 const API='https://throbbing-bar-e9d5.sanjayjajunda-x.workers.dev';
-const app=initializeApp(firebaseConfig),auth=getAuth(app);let currentUser=null,profile=null,selectedModule='students',scope={collegeId:'',tradeId:''};
-const $=id=>document.getElementById(id);const moduleNames={students:'विद्यार्थी',attendance:'उपस्थिति',tests:'टेस्ट / परीक्षा',tasks:'कार्य',inspections:'निरीक्षण',leaveRequests:'अवकाश आवेदन',materialRequests:'रॉ मटेरियल रिक्वेस्ट',reports:'रिपोर्ट'};
-function message(el,text,kind=''){el.textContent=text;el.className='msg '+kind;el.classList.remove('hidden')}
-async function api(path,options={}){const token=await currentUser.getIdToken();const res=await fetch(API+path,{...options,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',...(options.headers||{})}});const data=await res.json().catch(()=>({error:'Invalid server response'}));if(!res.ok)throw new Error(data.error||'Request failed');return data}
-function showModules(){const allowed=profile.role==='admin'?Object.keys(moduleNames):profile.role==='instructor'?Object.keys(moduleNames):['tasks','tests','attendance','leaveRequests','materialRequests','reports'];$('modules').innerHTML='';for(const key of allowed){const card=document.createElement('div');card.className='tile';const h=document.createElement('h3');h.textContent=moduleNames[key];const p=document.createElement('p');p.className='muted small';p.textContent='रिकॉर्ड देखने और जोड़ने के लिए खोलें';const b=document.createElement('button');b.textContent='खोलें';b.onclick=()=>openModule(key);card.append(h,p,b);$('modules').append(card)}}
-async function openModule(key){selectedModule=key;$('moduleTitle').textContent=moduleNames[key];$('workspace').classList.remove('hidden');$('dataMsg').classList.add('hidden');await loadRecords()}
-async function loadRecords(){try{const q=profile.role==='admin'?`?collegeId=${encodeURIComponent(scope.collegeId)}&tradeId=${encodeURIComponent(scope.tradeId)}`:'';const data=await api('/api/'+selectedModule+q);$('records').textContent=JSON.stringify(data,null,2)}catch(e){$('records').textContent=e.message}}
-$('loginForm').addEventListener('submit',async e=>{e.preventDefault();message($('loginMsg'),'लॉगिन हो रहा है…');try{await signInWithEmailAndPassword(auth,$('email').value,$('password').value)}catch(err){message($('loginMsg'),err.message,'error')}});
-onAuthStateChanged(auth,async user=>{currentUser=user;if(!user){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}try{profile=(await api('/api/me')).profile;$('login').classList.add('hidden');$('app').classList.remove('hidden');$('welcome').textContent=profile.role==='admin'?'Admin Dashboard':profile.role==='instructor'?'Instructor Dashboard':'Student Dashboard';$('who').textContent=(user.email||'')+' • '+profile.role;$('adminSetup').classList.toggle('hidden',profile.role!=='admin');if(profile.role==='admin'){scope={collegeId:'',tradeId:''};message($('setupMsg'),'Admin अकाउंट सक्रिय है। पहले College ID और Trade ID भरकर लागू करें।')}else{scope={collegeId:profile.collegeId,tradeId:profile.tradeId};$('setupMsg').classList.add('hidden')}showModules()}catch(e){await signOut(auth);$('login').classList.remove('hidden');message($('loginMsg'),e.message,'error')}});
-$('setScope').onclick=()=>{scope={collegeId:$('collegeId').value.trim(),tradeId:$('tradeId').value.trim()};if(!scope.collegeId||!scope.tradeId){message($('setupMsg'),'दोनों IDs भरें।','error');return}message($('setupMsg'),'College और Trade चुने गए। अब मॉड्यूल खोलें।','ok')};
-$('recordForm').addEventListener('submit',async e=>{e.preventDefault();try{const body=JSON.parse($('recordData').value);const q=profile.role==='admin'?`?collegeId=${encodeURIComponent(scope.collegeId)}&tradeId=${encodeURIComponent(scope.tradeId)}`:'';await api('/api/'+selectedModule+q,{method:'POST',body:JSON.stringify(body)});message($('dataMsg'),'रिकॉर्ड सेव हो गया।','ok');$('recordData').value='';await loadRecords()}catch(err){message($('dataMsg'),err instanceof SyntaxError?'कृपया सही JSON फॉर्मेट लिखें।':err.message,'error')}});
-$('refresh').onclick=loadRecords;$('logout').onclick=()=>signOut(auth);
+const auth=getAuth(initializeApp(firebaseConfig));let user=null,profile=null,scope={collegeId:'',tradeId:''},activeModule='students',records={},editingId=null;
+const $=id=>document.getElementById(id);
+const modules=[
+ ['students','विद्यार्थी','विद्यार्थी रजिस्टर, प्रवेश और संपर्क विवरण'],
+ ['attendance','उपस्थिति','दैनिक उपस्थिति रिकॉर्ड'],
+ ['tests','टेस्ट / परीक्षा','थ्योरी, प्रैक्टिकल और मूल्यांकन'],
+ ['tasks','कार्य','कार्य आवंटन और प्रगति'],
+ ['inspections','निरीक्षण','निरीक्षण और अनुपालन रिकॉर्ड'],
+ ['leaveRequests','अवकाश आवेदन','छुट्टी के आवेदन और स्वीकृति'],
+ ['materialRequests','रॉ मटेरियल रिक्वेस्ट','लैब सामग्री की मांग'],
+ ['reports','रिपोर्ट','प्रगति और सारांश रिपोर्ट']
+];
+const fieldSets={
+ students:[['roll','रोल नंबर','text'],['name','विद्यार्थी का नाम','text'],['fatherName','पिता का नाम','text'],['admissionNo','प्रवेश संख्या','text'],['dob','जन्मतिथि','date'],['mobile','मोबाइल नंबर','tel'],['gender','लिंग','select','पुरुष,महिला,अन्य'],['className','कक्षा / बैच','text'],['trade','ट्रेड','text'],['address','पता','textarea']],
+ attendance:[['date','दिनांक','date'],['studentName','विद्यार्थी का नाम','text'],['roll','रोल नंबर','text'],['status','उपस्थिति','select','P,A,L,H'],['session','सत्र','select','सुबह,शाम,पूरा दिन'],['remarks','टिप्पणी','textarea']],
+ tests:[['testName','टेस्ट / परीक्षा का नाम','text'],['date','दिनांक','date'],['studentName','विद्यार्थी का नाम','text'],['roll','रोल नंबर','text'],['subject','विषय','text'],['theoryMarks','थ्योरी अंक','number'],['practicalMarks','प्रैक्टिकल अंक','number'],['maxMarks','अधिकतम अंक','number'],['remarks','टिप्पणी','textarea']],
+ tasks:[['title','कार्य का शीर्षक','text'],['assignedTo','किसे सौंपा गया (UID)','text'],['dueDate','अंतिम तिथि','date'],['status','स्थिति','select','लंबित,प्रगति में,पूरा'],['description','कार्य विवरण','textarea']],
+ inspections:[['date','निरीक्षण दिनांक','date'],['inspector','निरीक्षक का नाम','text'],['area','निरीक्षण क्षेत्र','text'],['findings','निरीक्षण विवरण','textarea'],['actionRequired','आवश्यक कार्रवाई','textarea'],['status','स्थिति','select','खुला,प्रगति में,पूरा']],
+ leaveRequests:[['studentName','आवेदक का नाम','text'],['fromDate','से दिनांक','date'],['toDate','तक दिनांक','date'],['reason','अवकाश का कारण','textarea'],['status','स्थिति','select','लंबित,स्वीकृत,अस्वीकृत']],
+ materialRequests:[['itemName','सामग्री का नाम','text'],['quantity','मात्रा','text'],['unit','इकाई','text'],['requiredDate','आवश्यक दिनांक','date'],['purpose','उपयोग / आवश्यकता','textarea'],['status','स्थिति','select','लंबित,स्वीकृत,जारी']],
+ reports:[['title','रिपोर्ट शीर्षक','text'],['period','अवधि','select','दैनिक,साप्ताहिक,मासिक,वार्षिक'],['date','दिनांक','date'],['summary','रिपोर्ट विवरण','textarea'],['status','स्थिति','select','ड्राफ्ट,जमा,स्वीकृत']]
+};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function notice(id,msg,type=''){const el=$(id);el.textContent=msg;el.className='notice '+type;el.classList.remove('hidden')}
+function hide(id){$(id).classList.add('hidden')}
+function qs(){return profile?.role==='admin'?`?collegeId=${encodeURIComponent(scope.collegeId)}&tradeId=${encodeURIComponent(scope.tradeId)}`:''}
+async function api(path,opts={}){const token=await user.getIdToken();const res=await fetch(API+path,{...opts,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',...(opts.headers||{})}});const data=await res.json().catch(()=>({error:'सर्वर से गलत जवाब मिला'}));if(!res.ok)throw Error(data.error||'API अनुरोध विफल');return data}
+function roleLabel(r){return ({admin:'Admin',instructor:'Instructor',student:'Student'})[r]||r}
+function renderNav(){const allowed=profile.role==='student'?['tasks','tests','attendance','leaveRequests','materialRequests','reports']:modules.map(x=>x[0]);$('navList').innerHTML='';allowed.forEach(k=>{const m=modules.find(x=>x[0]===k),b=document.createElement('button');b.className='nav'+(k===activeModule?' active':'');b.textContent=m[1];b.onclick=()=>openModule(k);$('navList').append(b)})}
+function renderFields(){const fs=fieldSets[activeModule]||[];$('fields').innerHTML=fs.map(([key,label,type,opts])=>{let el=type==='textarea'?`<textarea id="f_${key}" name="${key}"></textarea>`:type==='select'?`<select id="f_${key}" name="${key}">${opts.split(',').map(v=>`<option>${esc(v)}</option>`).join('')}</select>`:`<input id="f_${key}" name="${key}" type="${type}" ${type==='number'?'min="0"':''}>`;return `<div class="${type==='textarea'?'wide':''}"><label for="f_${key}">${esc(label)}</label>${el}</div>`}).join('')}
+function openModule(key){activeModule=key;editingId=null;renderNav();const m=modules.find(x=>x[0]===key);$('moduleHeading').textContent=m[1];$('moduleSub').textContent=m[2];$('formHeading').textContent=m[1]+' — रिकॉर्ड जोड़ें';renderFields();$('recordForm').reset();loadRecords()}
+function resetForm(){editingId=null;$('recordForm').reset();$('formHeading').textContent=modules.find(x=>x[0]===activeModule)[1]+' — रिकॉर्ड जोड़ें';$('saveBtn').textContent='सुरक्षित करें'}
+function renderRecords(data){records=data&&typeof data==='object'?data:{};const rows=Object.entries(records);$('statCount').textContent=rows.length;$('recordCount').textContent=rows.length+' रिकॉर्ड';if(!rows.length){$('records').innerHTML='<div class="empty">अभी कोई रिकॉर्ड उपलब्ध नहीं है। ऊपर दिए फॉर्म से पहला रिकॉर्ड जोड़ें।</div>';return}
+const keys=[...new Set(rows.flatMap(([,v])=>Object.keys(v||{})))].filter(k=>!['createdBy','createdAt','updatedAt','updatedBy','studentUid'].includes(k)).slice(0,5);
+$('records').innerHTML=`<table><thead><tr>${keys.map(k=>`<th>${esc(k)}</th>`).join('')}<th>कार्रवाई</th></tr></thead><tbody>${rows.map(([id,v])=>`<tr>${keys.map(k=>`<td>${esc(v?.[k]??'—')}</td>`).join('')}<td>${profile.role==='admin'?`<button class="secondary" data-edit="${esc(id)}">एडिट</button> <button class="danger" data-delete="${esc(id)}">डिलीट</button>`:'—'}</td></tr>`).join('')}</tbody></table>`;
+$('records').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editRecord(b.dataset.edit));$('records').querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>deleteRecord(b.dataset.delete))}
+async function loadRecords(){if(profile.role==='admin'&&(!scope.collegeId||!scope.tradeId)){notice('statusMsg','पहले College ID और Trade ID लागू करें।','err');return}try{$('records').innerHTML='<div class="empty">रिकॉर्ड लोड हो रहे हैं…</div>';const data=await api('/api/'+activeModule+qs());renderRecords(data)}catch(e){$('records').innerHTML=`<div class="empty">${esc(e.message)}</div>`}}
+function editRecord(id){const r=records[id];if(!r)return;editingId=id;Object.entries(r).forEach(([k,v])=>{const el=$('f_'+k);if(el)el.value=v??''});$('formHeading').textContent='रिकॉर्ड एडिट करें';$('saveBtn').textContent='تبدیلی محفوظ کریں';window.scrollTo({top:$('workspace').offsetTop,behavior:'smooth'})}
+async function deleteRecord(id){if(!confirm('क्या यह रिकॉर्ड डिलीट करना है?'))return;try{await api('/api/'+activeModule+'/'+encodeURIComponent(id)+qs(),{method:'DELETE'});await loadRecords();notice('dataMsg','रिकॉर्ड डिलीट हो गया।','ok')}catch(e){notice('dataMsg',e.message,'err')}}
+$('loginForm').onsubmit=async e=>{e.preventDefault();$('loginBtn').disabled=true;try{await signInWithEmailAndPassword(auth,$('email').value.trim(),$('password').value);hide('loginMsg')}catch(err){notice('loginMsg',err.message,'err')}finally{$('loginBtn').disabled=false}};
+onAuthStateChanged(auth,async u=>{user=u;if(!u){$('loginPanel').classList.remove('hidden');$('appPanel').classList.add('hidden');return}try{profile=(await api('/api/me')).profile;$('loginPanel').classList.add('hidden');$('appPanel').classList.remove('hidden');$('welcome').textContent=roleLabel(profile.role)+' डैशबोर्ड';$('identity').textContent=(u.email||'')+' • '+roleLabel(profile.role);$('statRole').textContent=roleLabel(profile.role);$('scopePanel').classList.toggle('hidden',profile.role!=='admin');scope=profile.role==='admin'?{collegeId:'',tradeId:''}:{collegeId:profile.collegeId,tradeId:profile.tradeId};$('statCollege').textContent=scope.collegeId||'—';$('statTrade').textContent=scope.tradeId||'—';renderNav();openModule('students');if(profile.role==='admin')notice('statusMsg','Admin सक्रिय है। College ID और Trade ID लागू करने के बाद रिकॉर्ड खोलें।')}catch(err){await signOut(auth);notice('loginMsg',err.message,'err')}});
+$('applyScope').onclick=()=>{scope={collegeId:$('collegeId').value.trim(),tradeId:$('tradeId').value.trim()};if(!scope.collegeId||!scope.tradeId){notice('statusMsg','दोनों IDs भरना जरूरी है।','err');return}$('statCollege').textContent=scope.collegeId;$('statTrade').textContent=scope.tradeId;notice('statusMsg','कॉलेज और ट्रेड चुने गए। अब मॉड्यूल खोलें।','ok');loadRecords()};
+$('recordForm').onsubmit=async e=>{e.preventDefault();if(profile.role==='admin'&&(!scope.collegeId||!scope.tradeId)){notice('dataMsg','पहले कॉलेज और ट्रेड लागू करें।','err');return}const body={};new FormData(e.currentTarget).forEach((v,k)=>body[k]=v);try{const path='/api/'+activeModule+(editingId?'/'+encodeURIComponent(editingId):'')+qs();await api(path,{method:editingId?'PUT':'POST',body:JSON.stringify(body)});notice('dataMsg',editingId?'रिकॉर्ड अपडेट हो गया।':'रिकॉर्ड सुरक्षित हो गया।','ok');resetForm();await loadRecords()}catch(err){notice('dataMsg',err.message,'err')}};
+$('clearBtn').onclick=resetForm;$('refreshBtn').onclick=loadRecords;$('logoutBtn').onclick=()=>signOut(auth);
 </script>
 </body></html>
