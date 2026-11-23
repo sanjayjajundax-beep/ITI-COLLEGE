@@ -229,7 +229,74 @@ window.toggleTopic=async id=>{let t=topics.find(x=>x.id===id);if(!t)return;let s
 window.deleteTopic=async id=>{if(!confirm("क्या यह टॉपिक हटाना चाहते हैं?"))return;try{await deleteDoc(dbDoc("topics",id));topics=topics.filter(t=>t.id!==id);renderAll();toast("टॉपिक हटा दिया गया।")}catch(e){toast(e.message)}};
 window.renderSyllabus=()=>{renderPaperControls();let q=($("topicSearch")?.value||"").toLowerCase(),f=$("statusFilter")?.value||"all";let paperTopics=topics.filter(t=>(t.paperId||"paper1")===currentPaperId),arr=paperTopics.filter(t=>([t.name,t.subject,t.chapter].join(" ").toLowerCase().includes(q))&&(f==="all"||t.status===f));let done=paperTopics.filter(completed).length,pct=paperTopics.length?Math.round(done/paperTopics.length*100):0;$("syllabusSummary").textContent=`${papers.find(p=>p.id===currentPaperId)?.name||"पेपर"} · कुल ${paperTopics.length} टॉपिक · पूरे ${done} · प्रगति ${pct}% · दिखाए जा रहे ${arr.length}`;$("topicList").innerHTML=arr.length?arr.map(t=>`<div class="topic-card"><input type="checkbox" ${completed(t)?"checked":""} onchange="toggleTopic('${t.id}')"><div class="topic-info"><b>${esc(t.name)}</b><small>${esc(t.subject)}${t.chapter?" · "+esc(t.chapter):""}</small></div><span class="tag ${completed(t)?"done":t.status==="revision"?"review":""}">${completed(t)?"पूर्ण":"बाकी"}</span><div class="topic-actions"><button class="btn secondary small" onclick='editTopic("${t.id}")'>✎</button><button class="btn danger small" onclick="deleteTopic('${t.id}')">×</button></div></div>`).join(""):'<div class="empty"><b>इस पेपर में कोई टॉपिक नहीं है</b>इस पेपर का अलग सिलेबस अपलोड करें या नया टॉपिक जोड़ें।</div>'};
 window.editTopic=id=>openTopicModal(topics.find(t=>t.id===id));
-window.importSyllabus=async ev=>{let file=ev.target.files[0];if(!file)return;try{let rows=[];if(file.name.match(/\.(xlsx|xls|csv)$/i)){let wb=XLSX.read(await file.arrayBuffer(),{type:"array"});let ws=wb.Sheets[wb.SheetNames[0]];rows=XLSX.utils.sheet_to_json(ws,{defval:""});if(rows.length){let keys=Object.keys(rows[0]);let find=k=>keys.find(x=>x.toLowerCase().includes(k));let sk=find("subject")||find("विषय"),ck=find("chapter")||find("unit")||find("अध्याय")||find("यूनिट"),tk=find("topic")||find("टॉपिक")||find("विषय-वस्तु");if(!tk){tk=keys.find(k=>k!==sk&&k!==ck)||keys[0]}rows=rows.map(r=>({subject:r[sk]||"अन्य",chapter:r[ck]||"",name:r[tk]||""})).filter(r=>String(r.name).trim())}}else if(file.name.endsWith(".docx")){let result=await mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()});rows=result.value.split(/\r?\n/).map(x=>({subject:"आयात किया गया सिलेबस",chapter:"",name:x.replace(/^[-•*\d.)\s]+/,"").trim()})).filter(x=>x.name)}else{let text=await file.text();rows=text.split(/\r?\n/).map(x=>({subject:"आयात किया गया सिलेबस",chapter:"",name:x.trim()})).filter(x=>x.name)}if(!rows.length){toast("फाइल में पढ़ने योग्य टॉपिक नहीं मिले।");return}if(!confirm(`${rows.length} टॉपिक इंपोर्ट होंगे। आगे बढ़ें?`))return;let added=0;for(let r of rows){let id=uid(),activePaper=papers.find(p=>p.id===currentPaperId)||papers[0],data={paperId:activePaper?.id||currentPaperId,paperName:activePaper?.name||"पेपर 1",subject:String(r.subject||"अन्य").trim(),chapter:String(r.chapter||"").trim(),name:String(r.name).trim(),notes:"",status:"pending",revisions:[],importedAt:new Date().toISOString()};await saveRecord("topics",id,data);topics.push({id,...data});added++}renderAll();toast(`${added} टॉपिक सफलतापूर्वक इंपोर्ट हुए।`)}catch(e){toast("इंपोर्ट में समस्या: "+e.message)}finally{ev.target.value=""}};
+window.importSyllabus=async ev=>{
+ const input=ev.target,file=input.files?.[0];if(!file)return;
+ const ext=(file.name.split(".").pop()||"").toLowerCase();
+ try{
+  let rows=[];
+  if(["xlsx","xls","csv"].includes(ext)){
+   if(!window.XLSX)throw new Error("Excel पढ़ने की लाइब्रेरी लोड नहीं हुई। इंटरनेट चालू करके पेज Refresh करें।");
+   const wb=XLSX.read(await file.arrayBuffer(),{type:"array"});
+   const ws=wb.Sheets[wb.SheetNames[0]];
+   const raw=XLSX.utils.sheet_to_json(ws,{defval:"",raw:false});
+   if(raw.length){
+    const keys=Object.keys(raw[0]);
+    const find=terms=>keys.find(k=>terms.some(t=>String(k).toLowerCase().includes(t)));
+    const sk=find(["subject","विषय"]),ck=find(["chapter","unit","अध्याय","यूनिट"]),tk=find(["topic","टॉपिक","विषय-वस्तु"]);
+    const topicKey=tk||keys.find(k=>k!==sk&&k!==ck)||keys[0];
+    rows=raw.map(r=>({subject:r[sk]||"अन्य",chapter:r[ck]||"",name:r[topicKey]||""}))
+      .filter(r=>String(r.name).trim());
+   }
+  }else if(ext==="docx"){
+   if(!window.mammoth)throw new Error("Word फाइल पढ़ने की लाइब्रेरी लोड नहीं हुई। इंटरनेट चालू करके पेज Refresh करें।");
+   const buffer=await file.arrayBuffer();
+   let extracted="";
+   try{
+    const result=await window.mammoth.extractRawText({arrayBuffer:buffer});
+    extracted=result.value||"";
+   }catch(parseError){
+    throw new Error("Word फाइल पढ़ी नहीं जा सकी। इसे Microsoft Word में खोलकर .DOCX के रूप में दोबारा सेव करें।");
+   }
+   // Normalize Word paragraph, bullet and numbered-list text.
+   rows=extracted.replace(/\u00a0/g," ").replace(/\r/g,"\n").split(/\n+/)
+    .map(line=>line.replace(/[\t ]+/g," ").replace(/^\s*(?:[•●▪◦\-–—*]|\d{1,3}[.)、])\s*/,"").trim())
+    .filter(line=>line && !/^(?:सिलेबस|पाठ्यक्रम|विषय सूची|contents|table of contents)$/i.test(line))
+    .map(name=>({subject:"आयात किया गया सिलेबस",chapter:"",name}));
+  }else if(ext==="txt"){
+   const txt=await file.text();
+   rows=txt.replace(/\r/g,"\n").split(/\n+/).map(line=>line.replace(/^\s*(?:[•●▪◦\-–—*]|\d{1,3}[.)、])\s*/,"").trim())
+    .filter(Boolean).map(name=>({subject:"आयात किया गया सिलेबस",chapter:"",name}));
+  }else if(ext==="doc"){
+   throw new Error("यह पुराना .DOC फॉर्मेट है। Word में फाइल खोलें → Save As → Word Document (.DOCX) चुनें, फिर अपलोड करें।");
+  }else{
+   throw new Error("कृपया .DOCX, .XLSX, .XLS या .CSV फाइल चुनें।");
+  }
+  if(!rows.length)throw new Error("फाइल खुल गई, लेकिन उसमें पढ़ने योग्य टॉपिक नहीं मिले। Word में हर टॉपिक को अलग लाइन/पैराग्राफ में रखें और फिर .DOCX में सेव करें।");
+  const activePaper=papers.find(p=>p.id===currentPaperId)||papers[0];
+  if(!activePaper)throw new Error("पहले सिलेबस पेपर बनाएं या चुनें।");
+  const preview=rows.slice(0,5).map(r=>r.name).join("\n");
+  if(!confirm(`${activePaper.name||"चुने हुए पेपर"} में ${rows.length} टॉपिक इंपोर्ट होंगे।\n\nउदाहरण:\n${preview}\n\nक्या आगे बढ़ें?`))return;
+  let added=0;
+  for(const r of rows){
+   const id=uid(),data={
+    paperId:activePaper.id,paperName:activePaper.name||"पेपर 1",
+    subject:String(r.subject||"अन्य").trim(),chapter:String(r.chapter||"").trim(),
+    name:String(r.name||"").trim(),notes:"",status:"pending",revisions:[],
+    importedAt:new Date().toISOString()
+   };
+   if(!data.name)continue;
+   await saveRecord("topics",id,data);
+   topics.push({id,...data});added++;
+  }
+  renderAll();
+  toast(`${added} टॉपिक ${activePaper.name||"चुने हुए पेपर"} में सफलतापूर्वक इंपोर्ट हुए।`);
+ }catch(e){
+  console.error("Syllabus import error:",e);
+  toast("इंपोर्ट में समस्या: "+(e?.message||"अज्ञात त्रुटि"));
+ }finally{
+  input.value="";
+ }
+};
 window.exportSyllabus=()=>{let paperTopics=topics.filter(t=>(t.paperId||"paper1")===currentPaperId);if(!paperTopics.length){toast("एक्सपोर्ट करने के लिए सिलेबस नहीं है।");return}let ws=XLSX.utils.json_to_sheet(paperTopics.map(t=>({Paper:t.paperName||"पेपर",Subject:t.subject,Chapter:t.chapter,Topic:t.name,Status:completed(t)?"Completed":"Pending",CompletedDate:t.completedAt||"",RevisionDates:(t.revisions||[]).map(r=>r.date+(r.done?" ✓":"")).join(", ")})));let wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Syllabus");XLSX.writeFile(wb,`My_Study_Diary_${(papers.find(p=>p.id===currentPaperId)?.name||"Paper").replace(/[^a-z0-9_-]/gi,"_")}.xlsx`)};
 window.openDiaryModal=(d=null)=>{$("diaryDate").value=d?.date||today();$("diaryPlan").value=d?.plan||"";$("diaryDone").value=d?.done||"";$("diaryHours").value=d?.hours||"";$("diaryMood").value=d?.mood||"अच्छा";$("diaryNotes").value=d?.notes||"";$("diaryModal").classList.add("show")};
 window.saveDiary=async()=>{let date=$("diaryDate").value;if(!date){toast("तारीख चुनें।");return}let data={date,plan:$("diaryPlan").value.trim(),done:$("diaryDone").value.trim(),hours:Number($("diaryHours").value||0),mood:$("diaryMood").value,notes:$("diaryNotes").value.trim(),updatedAt:new Date().toISOString()};try{await saveRecord("diaries",date,data);let i=diaries.findIndex(d=>d.date===date);if(i<0)diaries.push({id:date,...data});else diaries[i]={id:date,...data};diaries.sort((a,b)=>b.date.localeCompare(a.date));closeModal("diaryModal");renderAll();toast("डायरी सेव हो गई।")}catch(e){toast(e.message)}};
