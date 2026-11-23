@@ -2,26 +2,37 @@
   "id": "./",
   "name": "My Study Diary",
   "short_name": "Study Diary",
-  "description": "आपकी पढ़ाई, सिलेबस और डेली डायरी",
-  "lang": "hi",
+  "description": "अपनी पढ़ाई, सिलेबस, डेली डायरी, रिवीजन और मॉक टेस्ट को व्यवस्थित रखें।",
+  "lang": "hi-IN",
+  "dir": "ltr",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "orientation": "portrait-primary",
   "background_color": "#f4f6fb",
   "theme_color": "#172554",
+  "categories": [
+    "education",
+    "productivity",
+    "utilities"
+  ],
+  "prefer_related_applications": false,
   "icons": [
     {
-      "src": "icons/icon-192.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "icons/icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
